@@ -1,5 +1,5 @@
 """
-Sistema de Pré-Check-in Hoteleiro
+Sistema de Pré-Check-in Hoteleiro - SEM BANCO DE DADOS
 Aplicação Flask para otimizar o processo de check-in de hóspedes
 
 Autor: Sistema de Hotel
@@ -7,34 +7,21 @@ Data: 2024
 """
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
-from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 import os
 import uuid
 import qrcode
-from io import BytesIO
 import base64
 from dotenv import load_dotenv
-
-from models import db, Usuario, Hospede, ConfiguracaoSistema, LogAcesso, init_db
-from forms import LoginForm, PreCheckinForm, PesquisaHospedeForm
+import json
 
 # Carregar variáveis de ambiente
 load_dotenv()
 
 app = Flask(__name__)
-
-# Configurações
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'sua-chave-secreta-super-segura-aqui')
-
-# CORRIGIR CAMINHO DO BANCO DE DADOS
-basedir = os.path.abspath(os.path.dirname(__file__))
-database_path = os.path.join(basedir, 'database', 'hotel.db')
-database_url = f'sqlite:///{database_path}' if os.name != 'nt' else f'sqlite:///{database_path.replace(chr(92), "/")}'
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', database_url)
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Pastas de upload
@@ -42,18 +29,38 @@ app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 app.config['DOCUMENT_FOLDER'] = os.path.join('static', 'uploads', 'documents')
 app.config['SIGNATURE_FOLDER'] = os.path.join('static', 'uploads', 'signatures')
 app.config['QRCODE_FOLDER'] = os.path.join('static', 'uploads', 'qrcodes')
+app.config['DATA_FOLDER'] = os.path.join('data')
 
 ALLOWED_EXTENSIONS = {'pdf', 'jpg', 'jpeg', 'png'}
 
-# Inicializar banco de dados
-db.init_app(app)
-
-# Criar pasta database e pastas de upload se não existirem
-os.makedirs(os.path.join(basedir, 'database'), exist_ok=True)
+# Criar pastas se não existirem
 for folder in [app.config['UPLOAD_FOLDER'], app.config['DOCUMENT_FOLDER'], 
-               app.config['SIGNATURE_FOLDER'], app.config['QRCODE_FOLDER']]:
+               app.config['SIGNATURE_FOLDER'], app.config['QRCODE_FOLDER'],
+               app.config['DATA_FOLDER']]:
     os.makedirs(folder, exist_ok=True)
 
+# ==================== SIMULAÇÃO DE DADOS EM MEMÓRIA ====================
+
+# Dados de usuários (simulando banco de dados)
+USUARIOS = {
+    'admin@hotel.com': {
+        'id': 1,
+        'email': 'admin@hotel.com',
+        'senha': generate_password_hash('admin123'),
+        'nome': 'Administrador',
+        'cargo': 'gerente',
+        'ativo': True
+    }
+}
+
+# Dados de hóspedes (simulando banco de dados)
+HOSPEDES = {}
+HOSPEDES_ID_COUNTER = [1]  # Contador em lista para ser mutável
+
+# Logs (simulando banco de dados)
+LOGS = []
+
+# ==================== FUNÇÕES AUXILIARES ====================
 
 def allowed_file(filename):
     """Verifica se o arquivo tem extensão permitida."""
@@ -89,18 +96,52 @@ def gerar_qrcode(protocolo, hospede_id):
 def registrar_log(acao, descricao=None, usuario_id=None, hospede_id=None):
     """Registra ações no sistema para auditoria."""
     try:
-        log = LogAcesso(
-            usuario_id=usuario_id,
-            hospede_id=hospede_id,
-            acao=acao,
-            descricao=descricao,
-            ip_address=request.remote_addr,
-            user_agent=request.headers.get('User-Agent')
-        )
-        db.session.add(log)
-        db.session.commit()
+        log = {
+            'usuario_id': usuario_id,
+            'hospede_id': hospede_id,
+            'acao': acao,
+            'descricao': descricao,
+            'ip_address': request.remote_addr,
+            'user_agent': request.headers.get('User-Agent'),
+            'criado_em': datetime.utcnow().isoformat()
+        }
+        LOGS.append(log)
     except Exception as e:
         print(f"Erro ao registrar log: {e}")
+
+
+def obter_usuario_por_email(email):
+    """Obtém usuário pelo email."""
+    return USUARIOS.get(email)
+
+
+def obter_hospede_por_id(hospede_id):
+    """Obtém hóspede pelo ID."""
+    return HOSPEDES.get(hospede_id)
+
+
+def obter_hospede_por_protocolo(protocolo):
+    """Obtém hóspede pelo protocolo."""
+    for hospede in HOSPEDES.values():
+        if hospede.get('protocolo') == protocolo:
+            return hospede
+    return None
+
+
+def obter_hospede_por_cpf(cpf):
+    """Obtém hóspede pelo CPF."""
+    for hospede in HOSPEDES.values():
+        if hospede.get('cpf') == cpf:
+            return hospede
+    return None
+
+
+def obter_hospede_por_reserva(numero_reserva):
+    """Obtém hóspede pelo número de reserva."""
+    for hospede in HOSPEDES.values():
+        if hospede.get('numero_reserva') == numero_reserva:
+            return hospede
+    return None
 
 
 # ==================== ROTAS PÚBLICAS ====================
@@ -114,6 +155,8 @@ def index():
 @app.route('/pre-checkin/<token>', methods=['GET', 'POST'])
 def pre_checkin(token):
     """Página de pré-check-in para hóspedes."""
+    from forms import PreCheckinForm
+    
     form = PreCheckinForm()
     
     if form.validate_on_submit():
@@ -145,43 +188,49 @@ def pre_checkin(token):
             # Gerar protocolo
             protocolo = gerar_protocolo()
             
-            # Criar registro no banco
-            hospede = Hospede(
-                numero_reserva=form.numero_reserva.data,
-                nome_completo=form.nome_completo.data,
-                cpf=form.cpf.data,
-                data_nascimento=form.data_nascimento.data,
-                email=form.email.data,
-                telefone=form.telefone.data,
-                nacionalidade=form.nacionalidade.data,
-                endereco=form.endereco.data,
-                cidade=form.cidade.data,
-                estado=form.estado.data,
-                cep=form.cep.data,
-                data_entrada=form.data_entrada.data,
-                data_saida=form.data_saida.data,
-                quantidade_hospedes=form.quantidade_hospedes.data,
-                observacoes=form.observacoes.data,
-                tipo_documento=form.tipo_documento.data,
-                numero_documento=form.numero_documento.data,
-                documento_path=documento_path,
-                assinatura_path=assinatura_path,
-                status='concluido',
-                protocolo=protocolo,
-                concluido_em=datetime.utcnow(),
-                ip_origem=request.remote_addr,
-                user_agent=request.headers.get('User-Agent')
-            )
+            # Gerar ID para hóspede
+            hospede_id = HOSPEDES_ID_COUNTER[0]
+            HOSPEDES_ID_COUNTER[0] += 1
             
-            db.session.add(hospede)
-            db.session.commit()
+            # Criar registro do hóspede em memória
+            hospede = {
+                'id': hospede_id,
+                'numero_reserva': form.numero_reserva.data,
+                'nome_completo': form.nome_completo.data,
+                'cpf': form.cpf.data,
+                'data_nascimento': form.data_nascimento.data.isoformat(),
+                'email': form.email.data,
+                'telefone': form.telefone.data,
+                'nacionalidade': form.nacionalidade.data,
+                'endereco': form.endereco.data,
+                'cidade': form.cidade.data,
+                'estado': form.estado.data,
+                'cep': form.cep.data,
+                'data_entrada': form.data_entrada.data.isoformat(),
+                'data_saida': form.data_saida.data.isoformat(),
+                'quantidade_hospedes': form.quantidade_hospedes.data,
+                'observacoes': form.observacoes.data,
+                'tipo_documento': form.tipo_documento.data,
+                'numero_documento': form.numero_documento.data,
+                'documento_path': documento_path,
+                'assinatura_path': assinatura_path,
+                'status': 'concluido',
+                'protocolo': protocolo,
+                'concluido_em': datetime.utcnow().isoformat(),
+                'confirmado_em': None,
+                'ip_origem': request.remote_addr,
+                'user_agent': request.headers.get('User-Agent'),
+                'criado_em': datetime.utcnow().isoformat()
+            }
+            
+            # Adicionar hóspede aos dados
+            HOSPEDES[hospede_id] = hospede
             
             # Gerar QR Code
-            qrcode_path = gerar_qrcode(protocolo, hospede.id)
-            hospede.qrcode_path = qrcode_path
-            db.session.commit()
+            qrcode_path = gerar_qrcode(protocolo, hospede_id)
+            hospede['qrcode_path'] = qrcode_path
             
-            registrar_log('PRE_CHECKIN_CONCLUIDO', f'Pré-check-in de {form.nome_completo.data}', hospede_id=hospede.id)
+            registrar_log('PRE_CHECKIN_CONCLUIDO', f'Pré-check-in de {form.nome_completo.data}', hospede_id=hospede_id)
             
             flash('✓ Pré-check-in realizado com sucesso!', 'success')
             return redirect(url_for('confirmacao', protocolo=protocolo))
@@ -197,7 +246,7 @@ def pre_checkin(token):
 @app.route('/confirmacao/<protocolo>')
 def confirmacao(protocolo):
     """Tela de confirmação após pré-check-in."""
-    hospede = Hospede.query.filter_by(protocolo=protocolo).first()
+    hospede = obter_hospede_por_protocolo(protocolo)
     
     if not hospede:
         flash('✗ Protocolo não encontrado.', 'danger')
@@ -211,16 +260,18 @@ def confirmacao(protocolo):
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     """Login para acesso administrativo."""
+    from forms import LoginForm
+    
     form = LoginForm()
     
     if form.validate_on_submit():
-        usuario = Usuario.query.filter_by(email=form.email.data).first()
+        usuario = obter_usuario_por_email(form.email.data)
         
-        if usuario and check_password_hash(usuario.senha, form.senha.data) and usuario.ativo:
-            session['usuario_id'] = usuario.id
-            session['usuario_nome'] = usuario.nome
-            flash(f'✓ Bem-vindo, {usuario.nome}!', 'success')
-            registrar_log('LOGIN_ADMIN', f'Login de {usuario.nome}', usuario_id=usuario.id)
+        if usuario and check_password_hash(usuario['senha'], form.senha.data) and usuario['ativo']:
+            session['usuario_id'] = usuario['id']
+            session['usuario_nome'] = usuario['nome']
+            flash(f'✓ Bem-vindo, {usuario["nome"]}!', 'success')
+            registrar_log('LOGIN_ADMIN', f'Login de {usuario["nome"]}', usuario_id=usuario['id'])
             return redirect(url_for('admin_dashboard'))
         else:
             flash('✗ Email ou senha inválidos.', 'danger')
@@ -257,21 +308,27 @@ def login_required(f):
 def admin_dashboard():
     """Painel administrativo principal."""
     # Estatísticas
-    total_checkins = Hospede.query.count()
-    checkins_concluidos = Hospede.query.filter_by(status='concluido').count()
-    checkins_pendentes = Hospede.query.filter_by(status='pendente').count()
+    total_checkins = len(HOSPEDES)
+    checkins_concluidos = len([h for h in HOSPEDES.values() if h['status'] == 'concluido'])
+    checkins_pendentes = len([h for h in HOSPEDES.values() if h['status'] == 'pendente'])
     
     # Hóspedes chegando hoje
     hoje = datetime.utcnow().date()
-    hospedes_hoje = Hospede.query.filter_by(data_entrada=hoje, status='concluido').all()
+    hospedes_hoje = [h for h in HOSPEDES.values() 
+                    if h.get('data_entrada') and 
+                    datetime.fromisoformat(h['data_entrada']).date() == hoje and 
+                    h['status'] == 'concluido']
     
     # Próximas chegadas (próximos 7 dias)
-    proximas_sete_dias = (Hospede.query
-                         .filter(Hospede.data_entrada >= hoje)
-                         .filter(Hospede.data_entrada <= hoje + timedelta(days=7))
-                         .order_by(Hospede.data_entrada)
-                         .limit(10)
-                         .all())
+    proximas_sete_dias = []
+    for h in HOSPEDES.values():
+        if h.get('data_entrada'):
+            data_entrada = datetime.fromisoformat(h['data_entrada']).date()
+            if hoje <= data_entrada <= hoje + timedelta(days=7):
+                proximas_sete_dias.append(h)
+    
+    proximas_sete_dias = sorted(proximas_sete_dias, 
+                                key=lambda x: x['data_entrada'])[:10]
     
     context = {
         'total_checkins': total_checkins,
@@ -288,28 +345,28 @@ def admin_dashboard():
 @login_required
 def admin_hospedes():
     """Lista e busca de hóspedes cadastrados."""
+    from forms import PesquisaHospedeForm
+    
     form = PesquisaHospedeForm()
-    hospedes = []
+    hospedes = list(HOSPEDES.values())
     
     if request.method == 'GET':
-        query = Hospede.query
-        
         busca = request.args.get('busca')
         if busca:
-            query = query.filter(
-                (Hospede.nome_completo.ilike(f"%{busca}%")) |
-                (Hospede.numero_reserva.ilike(f"%{busca}%"))
-            )
+            hospedes = [h for h in hospedes 
+                       if busca.lower() in h['nome_completo'].lower() or 
+                       busca.lower() in h['numero_reserva'].lower()]
         
         status = request.args.get('status')
         if status:
-            query = query.filter_by(status=status)
+            hospedes = [h for h in hospedes if h['status'] == status]
         
         data_entrada = request.args.get('data_entrada')
         if data_entrada:
-            query = query.filter_by(data_entrada=data_entrada)
+            hospedes = [h for h in hospedes if h.get('data_entrada') == data_entrada]
         
-        hospedes = query.order_by(Hospede.criado_em.desc()).all()
+        # Ordenar por data de criação (mais recentes primeiro)
+        hospedes = sorted(hospedes, key=lambda x: x['criado_em'], reverse=True)
     
     return render_template('hospedes.html', hospedes=hospedes, form=form)
 
@@ -318,7 +375,12 @@ def admin_hospedes():
 @login_required
 def admin_detalhes_hospede(hospede_id):
     """Detalhes completos de um hóspede."""
-    hospede = Hospede.query.get_or_404(hospede_id)
+    hospede = obter_hospede_por_id(hospede_id)
+    
+    if not hospede:
+        flash('✗ Hóspede não encontrado.', 'danger')
+        return redirect(url_for('admin_hospedes'))
+    
     return render_template('detalhes_hospede.html', hospede=hospede)
 
 
@@ -326,17 +388,20 @@ def admin_detalhes_hospede(hospede_id):
 @login_required
 def confirmar_chegada(hospede_id):
     """Confirma a chegada de um hóspede."""
-    hospede = Hospede.query.get_or_404(hospede_id)
+    hospede = obter_hospede_por_id(hospede_id)
     
-    if hospede.status == 'concluido':
-        hospede.confirmado_em = datetime.utcnow()
-        db.session.commit()
+    if not hospede:
+        flash('✗ Hóspede não encontrado.', 'danger')
+        return redirect(url_for('admin_hospedes'))
+    
+    if hospede['status'] == 'concluido':
+        hospede['confirmado_em'] = datetime.utcnow().isoformat()
         
         usuario_id = session.get('usuario_id')
-        registrar_log('CHEGADA_CONFIRMADA', f'Chegada de {hospede.nome_completo}', 
+        registrar_log('CHEGADA_CONFIRMADA', f'Chegada de {hospede["nome_completo"]}', 
                      usuario_id=usuario_id, hospede_id=hospede_id)
         
-        flash(f'✓ Chegada de {hospede.nome_completo} confirmada!', 'success')
+        flash(f'✓ Chegada de {hospede["nome_completo"]} confirmada!', 'success')
     else:
         flash('✗ Apenas check-ins concluídos podem ser confirmados.', 'warning')
     
@@ -348,14 +413,14 @@ def confirmar_chegada(hospede_id):
 @app.route('/api/validar-cpf/<cpf>')
 def api_validar_cpf(cpf):
     """API para validar CPF único."""
-    hospede_existente = Hospede.query.filter_by(cpf=cpf).first()
+    hospede_existente = obter_hospede_por_cpf(cpf)
     return jsonify({'disponivel': hospede_existente is None})
 
 
 @app.route('/api/validar-reserva/<numero_reserva>')
 def api_validar_reserva(numero_reserva):
     """API para validar número de reserva."""
-    reserva_existente = Hospede.query.filter_by(numero_reserva=numero_reserva).first()
+    reserva_existente = obter_hospede_por_reserva(numero_reserva)
     return jsonify({'disponivel': reserva_existente is None})
 
 
@@ -390,21 +455,10 @@ def inject_user():
 
 
 if __name__ == '__main__':
-    with app.app_context():
-        init_db(app)
-        
-        # Criar usuário admin padrão se não existir
-        admin = Usuario.query.filter_by(email='admin@hotel.com').first()
-        if not admin:
-            admin = Usuario(
-                email='admin@hotel.com',
-                senha=generate_password_hash('admin123'),
-                nome='Administrador',
-                cargo='gerente',
-                ativo=True
-            )
-            db.session.add(admin)
-            db.session.commit()
-            print("✓ Usuário admin criado: admin@hotel.com / admin123")
+    print("=" * 60)
+    print("✓ Sistema de Pré-Check-in Hoteleiro")
+    print("✓ Modo: SEM BANCO DE DADOS (Em Memória)")
+    print("✓ Admin: admin@hotel.com / admin123")
+    print("=" * 60)
     
     app.run(debug=True, host='0.0.0.0', port=5000)
