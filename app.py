@@ -28,7 +28,12 @@ app = Flask(__name__)
 
 # Configurações
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'sua-chave-secreta-super-segura-aqui')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///database/hotel.db')
+
+# CORRIGIR CAMINHO DO BANCO DE DADOS
+basedir = os.path.abspath(os.path.dirname(__file__))
+database_path = os.path.join(basedir, 'database', 'hotel.db')
+database_url = f'sqlite:///{database_path}' if os.name != 'nt' else f'sqlite:///{database_path.replace(chr(92), "/")}'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', database_url)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
@@ -43,7 +48,8 @@ ALLOWED_EXTENSIONS = {'pdf', 'jpg', 'jpeg', 'png'}
 # Inicializar banco de dados
 db.init_app(app)
 
-# Criar pastas se não existirem
+# Criar pasta database e pastas de upload se não existirem
+os.makedirs(os.path.join(basedir, 'database'), exist_ok=True)
 for folder in [app.config['UPLOAD_FOLDER'], app.config['DOCUMENT_FOLDER'], 
                app.config['SIGNATURE_FOLDER'], app.config['QRCODE_FOLDER']]:
     os.makedirs(folder, exist_ok=True)
