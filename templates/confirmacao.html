@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Confirmação - Pré-Check-in Concluído{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Success Card -->
+            <div class="card border-0 shadow-lg">
+                <div class="card-body p-5">
+                    <!-- Success Icon -->
+                    <div class="text-center mb-4">
+                        <div class="success-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+
+                    <!-- Success Message -->
+                    <h1 class="h2 text-center fw-bold mb-3">Pré-Check-in Concluído!</h1>
+                    <p class="lead text-center text-muted mb-5">
+                        Seu cadastro foi realizado com sucesso. Você está pronto para a hospedagem.
+                    </p>
+
+                    <!-- Protocolo Section -->
+                    <div class="alert alert-light border-2 border-primary mb-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5 class="mb-2"><i class="fas fa-receipt"></i> Número de Protocolo</h5>
+                                <p class="fs-5 fw-bold text-primary mb-0">{{ protocolo }}</p>
+                            </div>
+                            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                <button class="btn btn-outline-primary btn-sm" onclick="copiarProtocolo()">
+                                    <i class="fas fa-copy"></i> Copiar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QR Code Section -->
+                    {% if hospede.qrcode_path %}
+                    <div class="text-center mb-4">
+                        <h5 class="mb-3"><i class="fas fa-qrcode"></i> Seu QR Code</h5>
+                        <img src="{{ url_for('static', filename=hospede.qrcode_path) }}" 
+                             alt="QR Code" class="img-fluid" style="max-width: 250px;">
+                        <p class="text-muted small mt-2">Apresente este código na recepção do hotel</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Informações Resumidas -->
+                    <div class="card bg-light border-0 mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3"><i class="fas fa-info-circle"></i> Informações Resumidas</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <p class="mb-1 text-muted small">Nome</p>
+                                    <p class="fw-bold">{{ hospede.nome_completo }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1 text-muted small">Email</p>
+                                    <p class="fw-bold">{{ hospede.email }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1 text-muted small">Data de Entrada</p>
+                                    <p class="fw-bold">{{ hospede.data_entrada.strftime('%d/%m/%Y') }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1 text-muted small">Data de Saída</p>
+                                    <p class="fw-bold">{{ hospede.data_saida.strftime('%d/%m/%Y') }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1 text-muted small">Número da Reserva</p>
+                                    <p class="fw-bold">{{ hospede.numero_reserva }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1 text-muted small">Hóspedes</p>
+                                    <p class="fw-bold">{{ hospede.quantidade_hospedes }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Next Steps -->
+                    <div class="alert alert-info mb-4">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-arrow-right"></i> Próximos Passos
+                        </h5>
+                        <ul class="mb-0 ms-3">
+                            <li>Apresente o protocolo ou QR Code na recepção do hotel</li>
+                            <li>Identifique-se com o documento utilizado no cadastro</li>
+                            <li>Retire sua chave/cartão de acesso em poucos segundos</li>
+                            <li>Aproveite sua hospedagem!</li>
+                        </ul>
+                    </div>
+
+                    <!-- Important Notes -->
+                    <div class="alert alert-warning" role="alert">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle"></i> Informações Importantes
+                        </h5>
+                        <ul class="mb-0 ms-3">
+                            <li>Guarde bem seu protocolo (pode ser em foto ou impresso)</li>
+                            <li>Confirme sua chegada com o hotel 24h antes se houver mudanças</li>
+                            <li>Leve um documento de identidade válido no check-in</li>
+                            <li>Em caso de dúvidas, entre em contato com o hotel</li>
+                        </ul>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <button class="btn btn-primary btn-lg" onclick="imprimirConfirmacao()">
+                            <i class="fas fa-print"></i> Imprimir Confirmação
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-home"></i> Voltar para Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.success-icon {
+    font-size: 5rem;
+    color: #22C55E;
+    animation: successAnimation 0.6s ease-in-out;
+}
+
+@keyframes successAnimation {
+    0% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+</style>
+
+<script>
+function copiarProtocolo() {
+    const protocolo = '{{ protocolo }}';
+    navigator.clipboard.writeText(protocolo).then(() => {
+        alert('Protocolo copiado para a área de transferência!');
+    }).catch(err => {
+        console.error('Erro ao copiar:', err);
+    });
+}
+
+function imprimirConfirmacao() {
+    window.print();
+}
+</script>
+{% endblock %}

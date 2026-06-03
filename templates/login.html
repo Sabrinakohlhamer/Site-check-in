@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Painel Administrativo{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-md-6 col-lg-5">
+                <div class="login-card">
+                    <!-- Logo/Header -->
+                    <div class="text-center mb-5">
+                        <div class="login-icon mb-3">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <h1 class="h3 fw-bold">Painel Administrativo</h1>
+                        <p class="text-muted">Acesso restrito para gerenciamento</p>
+                    </div>
+
+                    <!-- Form -->
+                    <form method="POST" class="login-form">
+                        {{ form.hidden_tag() }}
+
+                        <!-- Email Field -->
+                        <div class="mb-4">
+                            <label for="{{ form.email.id }}" class="form-label fw-bold">
+                                <i class="fas fa-envelope"></i> Email
+                            </label>
+                            {{ form.email(class="form-control form-control-lg") }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-2">
+                                    {% for error in form.email.errors %}
+                                        <i class="fas fa-exclamation-circle"></i> {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Password Field -->
+                        <div class="mb-4">
+                            <label for="{{ form.senha.id }}" class="form-label fw-bold">
+                                <i class="fas fa-key"></i> Senha
+                            </label>
+                            {{ form.senha(class="form-control form-control-lg") }}
+                            {% if form.senha.errors %}
+                                <div class="text-danger small mt-2">
+                                    {% for error in form.senha.errors %}
+                                        <i class="fas fa-exclamation-circle"></i> {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid mb-3">
+                            {{ form.submit(class="btn btn-primary btn-lg fw-bold") }}
+                        </div>
+
+                        <!-- Info Box -->
+                        <div class="alert alert-info" role="alert">
+                            <small>
+                                <strong>Credenciais de Demonstração:</strong><br>
+                                Email: <code>admin@hotel.com</code><br>
+                                Senha: <code>admin123</code>
+                            </small>
+                        </div>
+                    </form>
+
+                    <!-- Footer -->
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('index') }}" class="text-muted text-decoration-none">
+                            <i class="fas fa-arrow-left"></i> Voltar para Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.login-container {
+    background: linear-gradient(135deg, #1E3A5F 0%, #2c5aa0 100%);
+    min-height: 100vh;
+}
+
+.login-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(30, 58, 95, 0.3);
+    padding: 3rem;
+}
+
+.login-icon {
+    font-size: 3rem;
+    color: #1E3A5F;
+}
+
+.login-form .form-control:focus {
+    border-color: #1E3A5F;
+    box-shadow: 0 0 0 0.2rem rgba(30, 58, 95, 0.25);
+}
+</style>
+{% endblock %}

@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Bem-vindo - Sistema de Pré-Check-in Hoteleiro{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container h-100 d-flex align-items-center">
+        <div class="row w-100 align-items-center">
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <h1 class="display-4 fw-bold mb-4 text-white">
+                    <i class="fas fa-key"></i> Bem-vindo ao Sistema de Pré-Check-in
+                </h1>
+                <p class="lead text-white-50 mb-4">
+                    Realize seu check-in online antes de chegar ao hotel e desfrute de uma experiência rápida, segura e confortável.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="#beneficios" class="btn btn-primary btn-lg">
+                        <i class="fas fa-arrow-down"></i> Saiba Mais
+                    </a>
+                    <a href="{{ url_for('admin_login') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-lock"></i> Acesso Admin
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <div class="hero-illustration">
+                    <i class="fas fa-hotel fa-10x text-primary opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Benefícios Section -->
+<section id="beneficios" class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">Benefícios do Pré-Check-in</h2>
+            <p class="lead text-muted">Experiência melhorada para hóspedes e eficiência para o hotel</p>
+        </div>
+        <div class="row g-4">
+            <!-- Benefício 1: Hóspedes -->
+            <div class="col-md-6 col-lg-3">
+                <div class="benefit-card">
+                    <div class="benefit-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <h5 class="mt-3 fw-bold">Para Hóspedes</h5>
+                    <ul class="list-unstyled mt-3 text-muted">
+                        <li><i class="fas fa-check text-success"></i> Sem filas de espera</li>
+                        <li><i class="fas fa-check text-success"></i> Check-in em casa</li>
+                        <li><i class="fas fa-check text-success"></i> Processo rápido</li>
+                        <li><i class="fas fa-check text-success"></i> Conforto máximo</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Benefício 2: Economia de Tempo -->
+            <div class="col-md-6 col-lg-3">
+                <div class="benefit-card">
+                    <div class="benefit-icon">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                    <h5 class="mt-3 fw-bold">Economia de Tempo</h5>
+                    <ul class="list-unstyled mt-3 text-muted">
+                        <li><i class="fas fa-check text-success"></i> Reduz filas</li>
+                        <li><i class="fas fa-check text-success"></i> Menos espera</li>
+                        <li><i class="fas fa-check text-success"></i> Check-in em 2min</li>
+                        <li><i class="fas fa-check text-success"></i> Acesso imediato</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Benefício 3: Segurança -->
+            <div class="col-md-6 col-lg-3">
+                <div class="benefit-card">
+                    <div class="benefit-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h5 class="mt-3 fw-bold">Segurança</h5>
+                    <ul class="list-unstyled mt-3 text-muted">
+                        <li><i class="fas fa-check text-success"></i> Dados criptografados</li>
+                        <li><i class="fas fa-check text-success"></i> Assinatura digital</li>
+                        <li><i class="fas fa-check text-success"></i> Protocolo seguro</li>
+                        <li><i class="fas fa-check text-success"></i> QR Code único</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Benefício 4: Eficiência -->
+            <div class="col-md-6 col-lg-3">
+                <div class="benefit-card">
+                    <div class="benefit-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h5 class="mt-3 fw-bold">Eficiência</h5>
+                    <ul class="list-unstyled mt-3 text-muted">
+                        <li><i class="fas fa-check text-success"></i> Menos erros</li>
+                        <li><i class="fas fa-check text-success"></i> Dados validados</li>
+                        <li><i class="fas fa-check text-success"></i> Melhor NPS</li>
+                        <li><i class="fas fa-check text-success"></i> Produtividade +50%</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Como Funciona Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">Como Funciona</h2>
+            <p class="lead text-muted">Um processo simples em 5 passos</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-2 text-center">
+                <div class="step-circle">1</div>
+                <h5 class="mt-3 fw-bold">Link por Email</h5>
+                <p class="text-muted">Receba o link de acesso via email</p>
+            </div>
+            <div class="col-md-6 col-lg-2 text-center">
+                <div class="step-circle">2</div>
+                <h5 class="mt-3 fw-bold">Preencha Dados</h5>
+                <p class="text-muted">Complete suas informações pessoais</p>
+            </div>
+            <div class="col-md-6 col-lg-2 text-center">
+                <div class="step-circle">3</div>
+                <h5 class="mt-3 fw-bold">Envie Documento</h5>
+                <p class="text-muted">Faça upload do RG ou Passaporte</p>
+            </div>
+            <div class="col-md-6 col-lg-2 text-center">
+                <div class="step-circle">4</div>
+                <h5 class="mt-3 fw-bold">Assine Digital</h5>
+                <p class="text-muted">Assine digitalmente na tela</p>
+            </div>
+            <div class="col-md-6 col-lg-2 text-center">
+                <div class="step-circle">5</div>
+                <h5 class="mt-3 fw-bold">Protocolo</h5>
+                <p class="text-muted">Receba seu código e QR Code</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h2 class="h3 text-white mb-3">Pronto para acelerar seu check-in?</h2>
+                <p class="lead text-white-50">Comece seu pré-check-in online agora e economize tempo na recepção do hotel.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="#" class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#modalCheckin">
+                    <i class="fas fa-rocket"></i> Iniciar Pré-Check-in
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Modal para inserir token de acesso -->
+<div class="modal fade" id="modalCheckin" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white border-0">
+                <h5 class="modal-title">
+                    <i class="fas fa-key"></i> Acesso ao Pré-Check-in
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Digite o código de acesso que você recebeu por email ou WhatsApp:</p>
+                <form id="formAcessoCheckin">
+                    <div class="mb-3">
+                        <input type="text" class="form-control form-control-lg" id="tokenCheckin" 
+                               placeholder="Ex: ABC123XYZ" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="acessarCheckin()">
+                    <i class="fas fa-arrow-right"></i> Acessar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function acessarCheckin() {
+    const token = document.getElementById('tokenCheckin').value;
+    if (token.trim()) {
+        window.location.href = `/pre-checkin/${token}`;
+    } else {
+        alert('Por favor, digite o código de acesso');
+    }
+}
+</script>
+{% endblock %}
