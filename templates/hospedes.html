@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Hóspedes - Painel Administrativo{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 fw-bold">
+                <i class="fas fa-users"></i> Gerenciamento de Hóspedes
+            </h1>
+            <p class="text-muted">Pesquise e gerencie todos os hóspedes cadastrados</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-5">
+                    <label class="form-label fw-bold">Buscar por Nome ou Reserva</label>
+                    <input type="text" name="busca" class="form-control" 
+                           placeholder="Digite nome ou número da reserva..." 
+                           value="{{ request.args.get('busca', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="pendente" {% if request.args.get('status') == 'pendente' %}selected{% endif %}>Pendente</option>
+                        <option value="concluido" {% if request.args.get('status') == 'concluido' %}selected{% endif %}>Concluído</option>
+                        <option value="cancelado" {% if request.args.get('status') == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Data de Entrada</label>
+                    <input type="date" name="data_entrada" class="form-control" 
+                           value="{{ request.args.get('data_entrada', '') }}">
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Hóspedes -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-list"></i> Registros de Hóspedes
+                </h5>
+                <span class="badge bg-secondary">{{ hospedes|length }} resultados</span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if hospedes %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>Reserva</th>
+                            <th>Entrada</th>
+                            <th>Saída</th>
+                            <th>Status</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hospede in hospedes %}
+                        <tr>
+                            <td>
+                                <strong>{{ hospede.nome_completo }}</strong><br>
+                                <small class="text-muted">{{ hospede.email }}</small>
+                            </td>
+                            <td>{{ hospede.cpf }}</td>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ hospede.numero_reserva }}</span>
+                            </td>
+                            <td>{{ hospede.data_entrada.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ hospede.data_saida.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                {% if hospede.status == 'concluido' %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle"></i> Concluído
+                                    </span>
+                                {% elif hospede.status == 'pendente' %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-hourglass-half"></i> Pendente
+                                    </span>
+                                {% elif hospede.status == 'cancelado' %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times-circle"></i> Cancelado
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('admin_detalhes_hospede', hospede_id=hospede.id) }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> Ver
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-5 text-center text-muted">
+                <i class="fas fa-search fa-3x mb-3"></i>
+                <p>Nenhum hóspede encontrado</p>
+                <small>Tente ajustar seus critérios de busca</small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

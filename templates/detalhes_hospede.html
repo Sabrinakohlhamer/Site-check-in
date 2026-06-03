@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes - {{ hospede.nome_completo }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 fw-bold">
+                <i class="fas fa-user"></i> {{ hospede.nome_completo }}
+            </h1>
+            <p class="text-muted">Detalhes completos do cadastro e documentos</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{{ url_for('admin_hospedes') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Alert -->
+    {% if hospede.status == 'concluido' %}
+    <div class="alert alert-success" role="alert">
+        <i class="fas fa-check-circle"></i>
+        <strong>Status: Pré-Check-in Concluído</strong><br>
+        <small>Este hóspede completou seu pré-check-in e pode ser atendido na recepção.</small>
+    </div>
+    {% elif hospede.status == 'pendente' %}
+    <div class="alert alert-warning" role="alert">
+        <i class="fas fa-hourglass-half"></i>
+        <strong>Status: Pendente</strong><br>
+        <small>Aguardando conclusão do pré-check-in online.</small>
+    </div>
+    {% endif %}
+
+    <div class="row g-4">
+        <!-- Coluna Esquerda: Informações Pessoais -->
+        <div class="col-lg-8">
+            <!-- Dados Pessoais -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-id-card"></i> Informações Pessoais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Nome Completo</p>
+                            <p class="fw-bold">{{ hospede.nome_completo }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">CPF</p>
+                            <p class="fw-bold">{{ hospede.cpf }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Data de Nascimento</p>
+                            <p class="fw-bold">{{ hospede.data_nascimento.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Nacionalidade</p>
+                            <p class="fw-bold">{{ hospede.nacionalidade }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Email</p>
+                            <p class="fw-bold">{{ hospede.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Telefone</p>
+                            <p class="fw-bold">{{ hospede.telefone }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Endereço -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-map-marker-alt"></i> Endereço
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <p class="text-muted small mb-1">Endereço</p>
+                            <p class="fw-bold">{{ hospede.endereco }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Cidade</p>
+                            <p class="fw-bold">{{ hospede.cidade }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="text-muted small mb-1">Estado</p>
+                            <p class="fw-bold">{{ hospede.estado }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="text-muted small mb-1">CEP</p>
+                            <p class="fw-bold">{{ hospede.cep or 'Não informado' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dados da Reserva -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-calendar-alt"></i> Dados da Reserva
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Número da Reserva</p>
+                            <p class="fw-bold">{{ hospede.numero_reserva }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Quantidade de Hóspedes</p>
+                            <p class="fw-bold">{{ hospede.quantidade_hospedes }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Data de Entrada</p>
+                            <p class="fw-bold">{{ hospede.data_entrada.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-1">Data de Saída</p>
+                            <p class="fw-bold">{{ hospede.data_saida.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                        <div class="col-12">
+                            <p class="text-muted small mb-1">Observações</p>
+                            <p class="fw-bold">{{ hospede.observacoes or 'Nenhuma observação' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna Direita: Documentos e Ações -->
+        <div class="col-lg-4">
+            <!-- Protocolo e QR Code -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-receipt"></i> Protocolo
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if hospede.protocolo %}
+                    <div class="bg-light p-3 rounded mb-3">
+                        <p class="text-muted small mb-2">Número do Protocolo</p>
+                        <p class="fw-bold fs-6">{{ hospede.protocolo }}</p>
+                        <button class="btn btn-sm btn-outline-primary" onclick="copiarProtocolo()">
+                            <i class="fas fa-copy"></i> Copiar
+                        </button>
+                    </div>
+                    {% endif %}
+
+                    {% if hospede.qrcode_path %}
+                    <p class="text-muted small mb-2">QR Code</p>
+                    <img src="{{ url_for('static', filename=hospede.qrcode_path) }}" 
+                         alt="QR Code" class="img-fluid" style="max-width: 150px;">
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Documentação -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-file-upload"></i> Documentação
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-2">Tipo de Documento</p>
+                    <p class="fw-bold mb-3">{{ hospede.tipo_documento }}</p>
+
+                    <p class="text-muted small mb-2">Número</p>
+                    <p class="fw-bold mb-3">{{ hospede.numero_documento }}</p>
+
+                    {% if hospede.documento_path %}
+                    <p class="text-muted small mb-2">Arquivo Enviado</p>
+                    <a href="{{ url_for('static', filename=hospede.documento_path) }}" 
+                       class="btn btn-sm btn-outline-primary w-100" target="_blank">
+                        <i class="fas fa-download"></i> Visualizar Documento
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Assinatura Digital -->
+            {% if hospede.assinatura_path %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-pen-fancy"></i> Assinatura Digital
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <img src="{{ url_for('static', filename=hospede.assinatura_path) }}" 
+                         alt="Assinatura" class="img-fluid" style="max-width: 100%;">
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Ações -->
+            {% if hospede.status == 'concluido' and not hospede.confirmado_em %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('confirmar_chegada', hospede_id=hospede.id) }}">
+                        <button type="submit" class="btn btn-success w-100 py-2">
+                            <i class="fas fa-check-circle"></i> Confirmar Chegada
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% elif hospede.confirmado_em %}
+            <div class="alert alert-success" role="alert">
+                <i class="fas fa-check-circle"></i>
+                <strong>Chegada Confirmada</strong><br>
+                <small>{{ hospede.confirmado_em.strftime('%d/%m/%Y às %H:%M') }}</small>
+            </div>
+            {% endif %}
+
+            <!-- Timeline -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-history"></i> Histórico
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <p class="fw-bold">Cadastro Criado</p>
+                                <small class="text-muted">{{ hospede.criado_em.strftime('%d/%m/%Y às %H:%M') }}</small>
+                            </div>
+                        </div>
+
+                        {% if hospede.concluido_em %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <p class="fw-bold">Pré-Check-in Concluído</p>
+                                <small class="text-muted">{{ hospede.concluido_em.strftime('%d/%m/%Y às %H:%M') }}</small>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if hospede.confirmado_em %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-info"></div>
+                            <div class="timeline-content">
+                                <p class="fw-bold">Chegada Confirmada</p>
+                                <small class="text-muted">{{ hospede.confirmado_em.strftime('%d/%m/%Y às %H:%M') }}</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -35px;
+    top: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 3px solid white;
+}
+
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: -27px;
+    top: 25px;
+    width: 2px;
+    height: 40px;
+    background: #dee2e6;
+}
+
+.timeline-content p {
+    margin-bottom: 3px;
+}
+</style>
+
+<script>
+function copiarProtocolo() {
+    const protocolo = '{{ hospede.protocolo }}';
+    navigator.clipboard.writeText(protocolo).then(() => {
+        alert('Protocolo copiado!');
+    });
+}
+</script>
+{% endblock %}

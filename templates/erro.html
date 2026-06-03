@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Erro {{ codigo }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="min-height: 70vh;">
+        <div class="col-lg-6 text-center">
+            <h1 class="display-1 fw-bold text-primary mb-4">{{ codigo }}</h1>
+            <h2 class="h3 mb-3 text-dark">{{ mensagem }}</h2>
+            <p class="lead text-muted mb-4">
+                {% if codigo == 404 %}
+                    A página que você está procurando não foi encontrada.
+                {% elif codigo == 500 %}
+                    Desculpe, algo deu errado no servidor. Tente novamente mais tarde.
+                {% elif codigo == 403 %}
+                    Você não tem permissão para acessar este recurso.
+                {% else %}
+                    Ocorreu um erro. Tente novamente.
+                {% endif %}
+            </p>
+            <div class="d-flex gap-2 justify-content-center">
+                <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-home"></i> Voltar para Home
+                </a>
+                {% if usuario_logado %}
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Painel Administrativo{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 fw-bold">
+                <i class="fas fa-chart-line"></i> Dashboard Administrativo
+            </h1>
+            <p class="text-muted">Bem-vindo ao painel de controle do sistema de pré-check-in</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <p class="text-muted">
+                <i class="fas fa-calendar-alt"></i> 
+                {{ "Hoje" if 1 else "" }}
+                <strong>{{ now.strftime('%d de %B de %Y') }}</strong>
+            </p>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-4">
+        <!-- Total Check-ins -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted small mb-2">Total de Check-ins</p>
+                            <h3 class="fw-bold text-primary mb-0">{{ total_checkins }}</h3>
+                        </div>
+                        <div class="card-icon bg-primary bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-check-double text-primary fa-2x"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted mt-3 d-block">
+                        <i class="fas fa-arrow-up text-success"></i> Registros no sistema
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Check-ins Concluídos -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted small mb-2">Concluídos</p>
+                            <h3 class="fw-bold text-success mb-0">{{ checkins_concluidos }}</h3>
+                        </div>
+                        <div class="card-icon bg-success bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-check-circle text-success fa-2x"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted mt-3 d-block">
+                        {% if total_checkins > 0 %}
+                            <i class="fas fa-percent text-success"></i> {{ "%.0f"|format((checkins_concluidos/total_checkins)*100) }}% concluído
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Check-ins Pendentes -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted small mb-2">Pendentes</p>
+                            <h3 class="fw-bold text-warning mb-0">{{ checkins_pendentes }}</h3>
+                        </div>
+                        <div class="card-icon bg-warning bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-hourglass-half text-warning fa-2x"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted mt-3 d-block">
+                        <i class="fas fa-clock"></i> À espera de confirmação
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hóspedes Hoje -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted small mb-2">Chegando Hoje</p>
+                            <h3 class="fw-bold text-info mb-0">{{ hospedes_hoje|length }}</h3>
+                        </div>
+                        <div class="card-icon bg-info bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-users text-info fa-2x"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted mt-3 d-block">
+                        <i class="fas fa-calendar-check"></i> Previsão do dia
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hóspedes Chegando Hoje -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-door-open"></i> Hóspedes Chegando Hoje
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if hospedes_hoje %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Reserva</th>
+                                    <th>Email</th>
+                                    <th>Telefone</th>
+                                    <th>Status</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for hospede in hospedes_hoje %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ hospede.nome_completo }}</strong>
+                                    </td>
+                                    <td>{{ hospede.numero_reserva }}</td>
+                                    <td>{{ hospede.email }}</td>
+                                    <td>{{ hospede.telefone }}</td>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Concluído
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('admin_detalhes_hospede', hospede_id=hospede.id) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> Ver Detalhes
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-5 text-center text-muted">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <p>Nenhum hóspede chegando hoje</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Próximas Chegadas -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-calendar-check"></i> Próximas Chegadas (7 Dias)
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if proximas_chegadas %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Reserva</th>
+                                    <th>Data de Entrada</th>
+                                    <th>Noites</th>
+                                    <th>Status</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for hospede in proximas_chegadas %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ hospede.nome_completo }}</strong>
+                                    </td>
+                                    <td>{{ hospede.numero_reserva }}</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">
+                                            {{ hospede.data_entrada.strftime('%d/%m/%Y') }}
+                                        </span>
+                                    </td>
+                                    <td>{{ hospede.get_dias_hospedagem() }}</td>
+                                    <td>
+                                        {% if hospede.status == 'concluido' %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check-circle"></i> Concluído
+                                            </span>
+                                        {% elif hospede.status == 'pendente' %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-hourglass-half"></i> Pendente
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('admin_detalhes_hospede', hospede_id=hospede.id) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> Ver
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-5 text-center text-muted">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <p>Nenhuma chegada nos próximos 7 dias</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% set now = now() %}
+{% endblock %}
